@@ -12,14 +12,14 @@ int WarmPad::getState() {
   return state;
 }
 
-void WarmPad::on_C(){
+void WarmPad::on_C(){ //on_COLD
   state= W_C;
 }
 
-void WarmPad::on_W(){
+void WarmPad::on_W(){//on_WARM
   state= W_W;
 }
 
-void WarmPad::on_H(){
+void WarmPad::on_H(){//on_HOT
   state= W_H;
 }
