@@ -70,7 +70,7 @@ void setup() {
 
   dht.begin();
   lcd.begin(16,2);
-  warmpad.init();
+  warmpad.init();//열선패드 초기화
 
   if (!ECCX08.begin()) {
     Serial.println("No ECCX08 present!");
@@ -114,10 +114,10 @@ void loop() {
   if (millis() - lastMillis > 5000) {
     lastMillis = millis();
     char payload[512];
-    getDeviceStatus(payload);
+    getDeviceStatus(payload);//디바이스 상태 JSON 문자열로 가져옴(payload)
     //Serial.print("payload:");
     //Serial.println(payload);
-    sendMessage(payload);
+    sendMessage(payload);//payload aws iot로 전송
   }
 }
 
@@ -161,30 +161,38 @@ void connectMQTT() {
   mqttClient.subscribe("$aws/things/MyMKRWiFi1010/shadow/update/delta");
 }
 
+//현재 디바이스 상태를 얻는 함수
 void getDeviceStatus(char* payload) {
   // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
+  float t = dht.readTemperature();//현재 온도(온습도 센서)
 
-  // Read Warmpad status
+  //WarmPad의 3가지 설정
   const char* options[] = { "COLD", "WARM", "HOT"};
 
-  lcd.clear();
-  // 예를 들어, led1.getState()가 0부터 3 사이의 값을 반환한다고 가정하면:
+  lcd.clear();//lcd 초기화
+  //warmpad의 0,1,2 상태 가져오기
   int state = warmpad.getState();
+
+  //getState()로 가져온 상태(0,1,2)를 문자열로 바꾸기("COLD","WARM","HOT")
   const char* selectedOption = (state >= 0 && state < 3) ? options[state] : "Invalid";
 
-  if (t < 23){
+  
+  if (t < 0){//영하이면 3색 LED는 WHITE
+   //payload에 AWS IOT에 전송할 JSON 문자열 넣는 작업
    sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"WHITE\",\"WarmPad\":\"%s\",\"WarmPadState\":\"ON\"}}}",t,selectedOption);//WHITE(영하)
-   ledR.off();
+   //WHITE를 켜기 위해 3색 LED 조정(사용한 3색 LED는 모든 값을 다 끌 경우 WHITE가 나오는 버전)
+   //자신이 사용하는 3색 LED에 따라 변경이 필요한 부분
+   ledR.off(); 
    ledG.off();
    ledB.off();
+   //lcd에 출력
    lcd.print("WarmPad:");
-   lcd.print(selectedOption);
+   lcd.print(selectedOption);//현재 온도 설정
    lcd.setCursor(0,1);
-   lcd.print("ON");
+   lcd.print("ON");//현재 열선패드 상태
    delay(100);
   }
-  else if (t >=23 and t < 24){
+  else if (t >=0 and t < 10){//0~9도 일때 3색 LED는 BLUE
    sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"BLUE\",\"WarmPad\":\"%s\",\"WarmPadState\":\"ON\"}}}",t,selectedOption);//BLUE(0~10도)
    ledR.on();
    ledG.on();
@@ -195,53 +203,63 @@ void getDeviceStatus(char* payload) {
    lcd.print("ON");
    delay(100);
   }
-  else if (t >=24 and t < 25){
+  else if (t >=10 and t < 20){//10~19도 일때 3색 LED는 YELLOW
    ledR.off();
    ledG.off();
    ledB.on();
    lcd.print("WarmPad:");
    lcd.print(selectedOption);
    lcd.setCursor(0,1);
+  //만약 온도 설정이 COLD일 때,
    if(selectedOption == "COLD"){
-    if (t >=24.3){
+    //온도가 13도 이상이면 열선패드 OFF
+    if (t >=13){
       lcd.print("OFF");
       sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"YELLOW\",\"WarmPad\":\"%s\",\"WarmPadState\":\"OFF\"}}}",t,selectedOption);//YELLOW(10~20도)
     }
    }
+  //만약 온도 설정이 WARM일 때,
    else if(selectedOption == "WARM"){
-    if(t >= 24.6){
+    //온도가 16도 이상이면 열선패드 OFF
+    if(t >= 16){
       lcd.print("OFF");
       sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"YELLOW\",\"WarmPad\":\"%s\",\"WarmPadState\":\"OFF\"}}}",t,selectedOption);//YELLOW(10~20도)
     }
    }
-   else{
+   else{//이외의 상황에서는 다 ON
     lcd.print("ON");
     sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"YELLOW\",\"WarmPad\":\"%s\",\"WarmPadState\":\"ON\"}}}",t,selectedOption);//YELLOW(10~20도)
    }
    delay(100);
   }
-  else if(t >= 25){
+  else if(t >= 20){//20도 이상일 때 3색 LED는 RED
    ledR.off();
    ledG.on();
    ledB.on();
    lcd.print("WarmPad:");
    lcd.print(selectedOption);
    lcd.setCursor(0,1);
+    //만약 온도 설정이 COLD이면
    if(selectedOption == "COLD"){
+     //열선패드 OFF
       lcd.print("OFF");
       sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"RED\",\"WarmPad\":\"%s\",\"WarmPadState\":\"OFF\"}}}",t,selectedOption);//RED(20도 이상)
    }
+    //만약 온도 설정이 WARM이면
    else if(selectedOption == "WARM"){
+     //열선패드 OFF
       lcd.print("OFF");
       sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"RED\",\"WarmPad\":\"%s\",\"WarmPadState\":\"OFF\"}}}",t,selectedOption);//RED(20도 이상)
    }
+    //만약 온도 설정이 HOT이면
    else if(selectedOption == "HOT"){
-    if(t>=26){
+     //온도가 20도 이상이면 OFF
+    if(t>=20){
       lcd.print("OFF");
       sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"RED\",\"WarmPad\":\"%s\",\"WarmPadState\":\"OFF\"}}}",t,selectedOption);//RED(20도 이상)
     }
    }
-   else{
+   else{//이외의 상황에서는 다 ON
     lcd.print("ON");
     sprintf(payload, "{\"state\":{\"reported\":{\"temperature\":\"%0.2f\",\"LED3\":\"RED\",\"WarmPad\":\"%s\",\"WarmPadState\":\"ON\"}}}",t,selectedOption);//RED(20도 이상)
    }
@@ -249,7 +267,7 @@ void getDeviceStatus(char* payload) {
   }
 }
 
-void sendMessage(char* payload) {
+void sendMessage(char* payload) { //JSON 문자열을 AWS IoT MQTT Client에 보내는 코드
   char TOPIC_NAME[]= "$aws/things/MyMKRWiFi1010/shadow/update";
   
   Serial.print("Publishing send message:");
@@ -259,7 +277,7 @@ void sendMessage(char* payload) {
   mqttClient.endMessage();
 }
 
-
+//AWS IoT에서 받아오는 메세지
 void onMessageReceived(int messageSize) {
   // we received a message, print out the topic and contents
   Serial.print("Received a message with topic '");
@@ -303,17 +321,20 @@ void onMessageReceived(int messageSize) {
   Serial.println(WP);
   
   char payload[512];
-  
+
+  //받은 값이 COLD이면 warmpad.on_C
   if (strcmp(WP,"COLD")==0) {
     warmpad.on_C();
     sprintf(payload,"{\"state\":{\"reported\":{\"WARMPAD\":\"%s\"}}}","COLD");
     sendMessage(payload);
-    
+
+    //받은 값이 WARM이면 warmpad.on_W
   } else if (strcmp(WP, "WARM") == 0){
     warmpad.on_W();
     sprintf(payload, "{\"state\":{\"reported\":{\"WARMPAD\":\"%s\"}}}","WARM");
     sendMessage(payload);
-  
+
+    //받은 값이 HOT이면 warmpad.on_H
   } else if (strcmp(WP,"HOT")==0) {
     warmpad.on_H();
     sprintf(payload,"{\"state\":{\"reported\":{\"WARMPAD\":\"%s\"}}}","HOT");
