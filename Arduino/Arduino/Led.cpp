@@ -7,12 +7,12 @@ Led::Led(int pin) {
   this->pin = pin;
   init();
 }
-void Led::init() {
+void Led::init() {//초기화
   pinMode(pin, OUTPUT);
   // Always try to avoid duplicate code.
   // Instead of writing digitalWrite(pin, LOW) here,
   // call the function off() which already does that
-  off();
+  off();//LED가 꺼진 상태가 시작 상태
   state = LED_OFF;
 }
 void Led::on() {
