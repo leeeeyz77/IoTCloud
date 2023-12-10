@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Christmas Tree</title>
+<style>
+
+h1 {
+	color:red; 
+    font-family:Copperplate;
+    font-size:300%; 
+    text-align:center 
+   }
+
+h2 {
+	color:green; 
+    font-family:Copperplate;
+   }
+
+.btn {
+  border: none;
+  display: block;
+  text-align: center;
+  cursor: pointer;
+  text-transform: uppercase;
+  outline: none;
+  overflow: hidden;
+  position: relative;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  background-color: #b81414;
+  width:200px;
+  height:60px;
+  margin: 0 auto;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.20);
+}
+
+.btn span {
+  position: relative; 
+  z-index: 1;
+}
+
+.btn:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 490%;
+  width: 140%;
+  background: #008d62;
+  -webkit-transition: all .5s ease-in-out;
+  transition: all .5s ease-in-out;
+  -webkit-transform: translateX(-98%) translateY(-25%) rotate(45deg);
+  transform: translateX(-98%) translateY(-25%) rotate(45deg);
+}
+
+.btn:hover:after {
+  -webkit-transform: translateX(-9%) translateY(-25%) rotate(45deg);
+  transform: translateX(-9%) translateY(-25%) rotate(45deg);
+}
+
+}
+
+</style>
+</head>
+<body>
+
+
+<h1>Merry Christmas</h1>
+
+<p style="text-align: center;">
+  <img src="https://cdn.pixabay.com/photo/2016/11/14/09/14/cat-1822979_1280.jpg" style="max-width: 100%; height:auto;">
+</p>
+
+<!-- 열선패드 설정 온도 조절 버튼 -->
+<h2>WarmPad Temperature</h2>
+<div class="button_container">
+  <button class="btn"><span>COLD</span></button>
+  <button class="btn"><span>WARM</span></button>
+  <button class="btn"><span>HOT </span></button>
+</div>
+<br>
+<br>
+<hr>
+<!-- DynamoDB 로그 끌어오기 -->
+<h2>Record</h2>
+<table style="width:100%">
+  <tr>
+    <td>TimeStamp</td>
+    <td>LED3</td>
+    <td>temperature</td>
+    <td>WarmPad</td>
+    <td>WarmPadState</td>
+  </tr>
+  <tr>
+    <td>-</td>
+    <td>-</td> 
+    <td>-</td>
+    <td>-</td>
+    <td>-</td> 
+  </tr>
+</table>
+
+</body>
+</html>
