@@ -1,8 +1,8 @@
 #include <Arduino.h>
 
-#define W_C 0
-#define W_W 1
-#define W_H 2
+#define W_C 0 //"COLD"
+#define W_W 1 //"WARM"
+#define W_H 2 //"HOT"
 
 
 class WarmPad{
